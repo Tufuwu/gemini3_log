@@ -1,19 +1,25 @@
-name: Deploy
+name: Node.js CI
 
 on:
   push:
-    branches:
-      - source
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [10.x, 12.x, 14.x, 16.x]
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js 8
-        uses: actions/setup-node@v4
-        with:
-          node-version: '8'
-      - run: npm install
-      - run: npm run deploy
+    - uses: actions/checkout@v3
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: npm install
+    - run: npm test
 
