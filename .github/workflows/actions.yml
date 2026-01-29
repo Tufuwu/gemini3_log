@@ -1,50 +1,39 @@
-name: Python CI
+name: Python Package
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
-    runs-on: ${{ matrix.dist || 'ubuntu-latest' }}
-    continue-on-error: ${{ matrix.allow_failure || false }}
+    runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
         include:
-          - python: "3.8"
-            allow_failure: true
-          - python: "3.9"
-            allow_failure: true
-          - python: "3.10"
-            allow_failure: true
-          - python: "pypy2.7"
-            allow_failure: true
-          - python: "pypy3.6"
-            allow_failure: true
-          - python: "pypy3.7"
-            allow_failure: true
-          - python: "pypy3.8"
-            allow_failure: true
-          - python: "pypy3.9"
-            allow_failure: true
+          - python-version: '3.8'
+            tox-env: py38
+          - python-version: '3.9'
+            tox-env: py39
+          - python-version: '3.10'
+            tox-env: py310
+          - python-version: '3.11'
+            tox-env: py311
 
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Python ${{ matrix.python }}
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python }}
+          python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: |
-          pip install coveralls
-          pip install coverage
+        run: pip install tox
 
-      - name: Run tests with coverage
-        run: coverage run --branch --source=crc32 test.py
-
-      - name: Upload to Coveralls
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: coveralls
+      - name: Run tox
+        run: tox -e ${{ matrix.tox-env }}
 
