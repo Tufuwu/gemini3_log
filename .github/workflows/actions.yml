@@ -1,13 +1,17 @@
-name: Python Package
+name: CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [ main, main ]
+  pull_request:
+    branches: [ main, main ]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
-        python-version: ["3.8", "3.9"]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
 
     steps:
     - uses: actions/checkout@v3
@@ -17,26 +21,19 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Install Conda and Dependencies
+    - name: Install dependencies
       run: |
-        # Setup Miniconda
-        wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-        bash miniconda.sh -b -p $HOME/miniconda
-        export PATH="$HOME/miniconda/bin:$PATH"
-        echo "$HOME/miniconda/bin" >> $GITHUB_PATH
-        
-        # Install packages
-        conda update --yes conda
-        conda install --yes numpy scipy pyyaml matplotlib nose jupyter pandas 
-        conda info -a
-        
-        # Install pip requirements
-        pip install --upgrade pip
-        pip install -r requirements.txt
-        python setup.py develop
+        python -m pip install --upgrade pip
+        pip install .[dev]
+        pip install coverage coveralls
 
     - name: Run tests
       run: |
-        export PATH="$HOME/miniconda/bin:$PATH"
-        nosetests
+        pytest tests/regression_test.py
+        pytest -Werror --cov-branch --cov=mf2 tests/property_test.py tests/multi_fidelity_function_test.py
+
+    - name: Upload Coverage to Coveralls
+      run: coveralls
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
