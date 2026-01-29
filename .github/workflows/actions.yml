@@ -2,9 +2,9 @@ name: Node.js CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ main ]
 
 jobs:
   build:
@@ -16,15 +16,19 @@ jobs:
     - name: Use Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 'latest'
+        node-version: 'stable'
         cache: 'npm'
 
     - name: Install dependencies
       run: npm install
 
-    - name: Run tests
-      run: npm test
-
     - name: Build
       run: npm run build
+
+    - name: Test
+      run: npm test
+
+    - name: Upload coverage to Codecov
+      if: success()
+      run: npm run codecov
 
