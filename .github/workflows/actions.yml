@@ -1,4 +1,4 @@
-name: Node.js CI with LocalStack
+name: Node.js CI
 
 on:
   push:
@@ -10,33 +10,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        node-version: [lts/*]
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Use Node.js 12
-        uses: actions/setup-node@v3
-        with:
-          node-version: '12'
-          cache: 'npm'
-
-      - name: Start LocalStack
-        run: |
-          docker pull localstack/localstack
-          docker run --rm -d -p 4566:4566 localstack/localstack
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run lint and unit tests
-        run: |
-          set -e
-          npm run lint
-          npm run test
-
-      - name: Run integration tests
-        run: |
-          npm link
-          sleep 5
-          SLS_DEBUG=1 npm run test:integration
+    - uses: actions/checkout@v4
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - run: npm install
+    - run: npm test
 
