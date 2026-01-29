@@ -1,21 +1,39 @@
-name: Python Package Test
+name: CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [ main, main ]
+  pull_request:
+    branches: [ main, main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["pypy-3.8", "pypy-2.7", "3.11", "3.10", "3.9", "3.8"]
+
+    env:
+      TOXENV: base,optional,six19-optional
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python 3.8
+      - uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
-          python-version: "3.8"
-      - name: Build and test
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install dependencies
         run: |
-          python setup.py sdist
-          cd dist/
-          tar xf hsluv-*.tar.gz
-          cd hsluv-*/
-          python setup.py test
+          python -m pip install --upgrade pip
+          pip install tox
+
+      - name: Run tox
+        run: tox
+
+      - name: Post-script debug info
+        if: always()
+        run: python debug-info.py
 
