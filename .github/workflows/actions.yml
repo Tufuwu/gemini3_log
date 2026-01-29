@@ -2,33 +2,34 @@ name: Node.js CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, main ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v4
+    strategy:
+      matrix:
+        node-version: ["0.12", "4.2", "5.0"]
 
-      - name: Use Node.js stable
-        uses: actions/setup-node@v4
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
         with:
-          node-version: 'stable'
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install npm 2.14.5
+        run: npm install -g npm@2.14.5
 
       - name: Install dependencies
-        run: |
-          npm install -g codecov
-          npm install boolbase nth-check htmlparser2
-          npm install tape tap-spec istanbul
+        run: npm install
 
-      - name: Run coverage
-        run: npm run coverage
-
-      - name: Upload to Codecov
-        run: codecov
+      - name: Run tests
+        run: npm test
         env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          DEBUG: "*"
 
