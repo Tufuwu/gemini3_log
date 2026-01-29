@@ -1,4 +1,4 @@
-name: CI
+name: Node.js CI
 
 on:
   push:
@@ -8,28 +8,29 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [10.x, 12.x]
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 'latest'
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
 
-      - name: Install system dependencies
-        run: |
-          sudo apt update
-          sudo apt install -qy gjs libgjs-dev
+    - run: npm install
+    - run: npm test
 
-      - name: Install checkstyle
-        run: make install-checkstyle
-
-      - name: Run checkstyle
-        run: make checkstyle
-
-      - name: Run tests
-        run: make test
+    - name: Coveralls
+      if: success()
+      run: |
+        npm install -g nyc coveralls
+        nyc report --reporter=text-lcov | coveralls
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
