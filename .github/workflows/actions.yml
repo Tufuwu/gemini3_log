@@ -2,31 +2,24 @@ name: Node.js CI
 
 on:
   push:
-    branches: [ main, main ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, main ]
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     strategy:
-      fail-fast: true
       matrix:
-        node-version: [10.x]
+        node-version: [6.x, 8.x, 10.x]
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'yarn'
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile --non-interactive
-
-      - name: Run tests
-        run: yarn test
+    - uses: actions/checkout@v3
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: npm install
+    - run: npm test
 
