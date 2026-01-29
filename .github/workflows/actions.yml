@@ -10,28 +10,22 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [16, 17]
-        winston-version: [winston@3]
-
     steps:
-    - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'latest'
+          cache: 'npm'
 
-    - name: Install Winston
-      run: |
-        npm install ${{ matrix.winston-version }}
-      # Note: GitHub Actions has built-in retries for network issues, 
-      # but you can use 'nick-fields/retry' if explicit retry logic is needed.
+      - name: Install dependencies
+        run: |
+          npm install
+          make clean
+          make
 
-    - name: Install dependencies
-      run: npm install
-
-    - name: Run tests
-      run: npm test
+      - name: Run tests
+        run: npx mocha-headless-chrome -a no-sandbox -f test/index.html
 
