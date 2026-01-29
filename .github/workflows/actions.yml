@@ -2,35 +2,29 @@ name: Node.js CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ main ]
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [10.x, 12.x]
-
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
+    - name: Use Node.js
+      uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: 'latest'
         cache: 'npm'
 
-    - run: npm install
-    - run: npm test
+    - name: Install dependencies
+      run: npm install
 
-    - name: Coveralls
-      if: success()
-      run: |
-        npm install -g nyc coveralls
-        nyc report --reporter=text-lcov | coveralls
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Run tests
+      run: npm test
+
+    - name: Build
+      run: npm run build
 
