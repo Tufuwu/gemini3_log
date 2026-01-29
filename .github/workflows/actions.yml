@@ -1,48 +1,21 @@
-name: Python CI
+name: Python Linting
 
-on:
-  push:
-    branches: [ main, main ]
-  pull_request:
-    branches: [ main, main ]
+on: [push, pull_request]
 
 jobs:
   build:
     runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
-        include:
-          - python-version: "3.10"
-            experimental: true
-          - python-version: "3.11"
-            experimental: true
-
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install -U coverage codecov mypy
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Install dependencies
+        run: pip install -r linting/requirements.txt
 
-    - name: Run tests and mypy
-      continue-on-error: ${{ matrix.experimental || false }}
-      run: |
-        python -m coverage run --branch -m unittest discover -t . -s ni/test/
-        python -m mypy ni/*.py
-
-    - name: Upload coverage to Codecov
-      if: success()
-      uses: codecov/codecov-action@v4
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Run lint script
+        run: python ./linting/lint-csv.py
 
