@@ -10,22 +10,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        node-version: [node, 10, 8]
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 'latest'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: |
-          npm install
-          make clean
-          make
-
-      - name: Run tests
-        run: npx mocha-headless-chrome -a no-sandbox -f test/index.html
+    - uses: actions/checkout@v4
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: npm install
+    - run: npm test
 
