@@ -1,46 +1,32 @@
 name: Python CI
 
-on:
-  push:
-    branches: [ main, main ]
-  pull_request:
-    branches: [ main, main ]
+on: [push, pull_request]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11"]
-
-    env:
-      TRAVIS: "True"
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "pypy-3.9"]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Before Install
-        run: |
-          chmod +x download_etcd.sh
-          ./download_etcd.sh 3.4.0
-          pip install --upgrade setuptools
-
       - name: Install dependencies
         run: |
-          pip install coveralls coverage pytest tox tox-gh-actions
-          bin/buildout || echo "Ensure bin/buildout exists"
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov coveralls
 
       - name: Run tests
-        run: tox
+        run: py.test --cov validictory --cov-config=.coveragerc
 
-      - name: Upload Coverage
-        if: success()
-        run: coveralls
+      - name: Submit to Coveralls
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: coveralls
 
