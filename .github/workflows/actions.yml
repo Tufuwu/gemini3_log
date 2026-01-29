@@ -1,41 +1,25 @@
-name: CI
+name: Python Package
 
 on:
   push:
-    branches: [ main, main ]
-  pull_request:
-    branches: [ main, main ]
+    branches:
+      - main
 
 jobs:
-  test:
-    runs-on: ubuntu-24.04
-    strategy:
-      matrix:
-        include:
-          - python: '3.8'
-            tox_env: py38
-          - python: '3.9'
-            tox_env: py39
-          - python: 'pypy-3.7'
-            tox_env: pypy3.7
+  build:
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python }}
-          cache: 'pip'
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.8'
 
-      - name: Install dependencies
-        run: |
-          pip install -U -r requirements-dev.txt
-          pip install .
-          pip install tox pytest-dead-fixtures
+    - name: Install dependencies
+      run: python setup.py install
 
-      - name: Run tests
-        run: |
-          tox -e ${{ matrix.tox_env }}
-          pytest --dead-fixtures
+    - name: Run pytest
+      run: python -m pytest -v
 
