@@ -12,23 +12,20 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [12, 14, 16]
+        node-version: [14.x]
 
     steps:
     - uses: actions/checkout@v3
-    
+
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-        
-    - run: npm install
-    - run: npm test
-    
-    - name: Coveralls
-      if: success()
-      run: npm run coveralls
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        cache: 'yarn'
+
+    - name: Install dependencies
+      run: yarn
+
+    - name: Run CI script
+      run: yarn ci
 
