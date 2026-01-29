@@ -1,4 +1,4 @@
-name: Node.js CI
+name: CI
 
 on:
   push:
@@ -8,18 +8,28 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [18, 20, 21]
+    runs-on: ubuntu-20.04
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
-    - run: npm install
-    - run: npm test
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'latest'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt update
+          sudo apt install -qy gjs libgjs-dev
+
+      - name: Install checkstyle
+        run: make install-checkstyle
+
+      - name: Run checkstyle
+        run: make checkstyle
+
+      - name: Run tests
+        run: make test
 
