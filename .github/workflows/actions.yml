@@ -12,14 +12,21 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [0.10.x, 0.11.x]
+        node-version: [10, 12, 14]
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
+
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-    - run: npm install
-    - run: npm test
+
+    - name: Install dependencies
+      run: |
+        npm install
+        npm install grunt-cli -g
+
+    - name: Run tests
+      run: npm test
 
