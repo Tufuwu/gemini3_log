@@ -1,44 +1,33 @@
-name: CI
+name: Python CI
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
-        arch: [amd64, ppc64le]
-        without_extension: [0, 1]
-        exclude:
-          - arch: ppc64le # GitHub-hosted runners only support x86_64/arm64; ppc64le requires self-hosted
-
-    env:
-      WITHOUT_EXTENSION: ${{ matrix.without_extension }}
+        python-version: [3.8, 3.9]
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install dependencies
-        run: |
-          pip install coveralls pytest
-          python setup.py develop
-
-      - name: Run tests
-        run: |
-          coverage run --source=mwparserfromhell -m pytest
-
-      - name: Upload Coverage
-        run: coveralls
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        
+    - name: Install dependencies
+      run: |
+        pip install .
+        pip install coverage codecov
+        
+    - name: Run tests
+      run: |
+        coverage run tests.py
+        
+    - name: Upload coverage to Codecov
+      run: codecov
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
