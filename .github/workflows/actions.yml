@@ -2,9 +2,9 @@ name: Node.js CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, main ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, main ]
 
 jobs:
   build:
@@ -12,11 +12,11 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [0.10, 0.12, 4.x, 6.x, node]
+        node-version: [lts/*]
 
     steps:
     - uses: actions/checkout@v4
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: Use Node.js ${{ matrix: node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
