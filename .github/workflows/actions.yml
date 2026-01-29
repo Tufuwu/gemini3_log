@@ -1,43 +1,54 @@
-name: Python CI
+name: Python Package
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, main ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, main ]
+  release:
+    types: [published]
 
 jobs:
-  build:
-    runs-on: ubuntu-24.04
+  test:
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.8', '3.9', 'pypy-3.8']
+        python-version: ["3.9", "3.10"]
 
     steps:
     - uses: actions/checkout@v4
-
+    
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-
+        
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install tox tox-gh-actions codecov
-
-    - name: Test with tox
+        pip install tox tox-gh-actions
+        
+    - name: Run tests
       run: tox
 
-    - name: Upload coverage to Codecov
-      run: |
-        VERSION="python_${{ matrix.python-version }}"
-        VERSION=${VERSION//[^[:alnum:]]/}
-        codecov --required --flags $VERSION || \
-        (sleep 5 && codecov --required --flags $VERSION) || \
-        (sleep 10 && codecov --required --flags $VERSION) || \
-        (sleep 20 && codecov --required --flags $VERSION) || \
-        (sleep 30 && codecov --required --flags $VERSION)
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' && github.event.action == 'published'
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.10"
+        
+    - name: Build and publish
       env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      run: |
+        pip install setuptools wheel twine
+        python setup.py sdist bdist_wheel
+        twine upload dist/*
 
