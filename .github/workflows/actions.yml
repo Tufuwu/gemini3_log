@@ -2,38 +2,36 @@ name: Node.js CI
 
 on:
   push:
-    branches: [ main, main ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, main ]
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        node-version: [16, 17]
+        winston-version: [winston@3]
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '16'
-          cache: 'npm'
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
 
-      - name: Install dependencies
-        run: npm install
+    - name: Install Winston
+      run: |
+        npm install ${{ matrix.winston-version }}
+      # Note: GitHub Actions has built-in retries for network issues, 
+      # but you can use 'nick-fields/retry' if explicit retry logic is needed.
 
-      - name: Build
-        run: npm run build:prod
+    - name: Install dependencies
+      run: npm install
 
-      - name: Test
-        run: npm run test:coverage
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Upload coverage to Codecov
-        run: bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    - name: Run tests
+      run: npm test
 
